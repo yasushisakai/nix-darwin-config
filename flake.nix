@@ -42,6 +42,10 @@
         remapCapsLockToControl = true;
       };
 
+      system.activationScripts.postUserActivateion.text = ''
+        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+      '';
+
       system.defaults = {
       	dock = {
 	  show-recents = false;
@@ -101,6 +105,7 @@
           "hammerspoon"
 	  "zoom" # moved from systemPackages, for the alias
 	  "whatsapp"
+	  "google-chrome" # fall back browser
         ];
 
 	# NOTE: this will not get purged through `onActivation.cleanup`
@@ -110,6 +115,7 @@
 	  "Logic Pro" = 634148309;
 	  "Compressor" = 424390742;
 	  "Keynote" = 409183694;
+	  "Xcode" = 497799835;
 	  "Tailscale" = 1475387142; # Tailscale said mas rather than brew
 	};
       };
@@ -171,6 +177,7 @@
             options = [ "--cmd cd" ];
           };
 
+          # `zk init ~/Documents/memo`
 	  programs.zk = {
             enable = true;
 	    settings = {
