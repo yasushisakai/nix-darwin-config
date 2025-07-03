@@ -25,10 +25,17 @@
     ###########################################################
 
     configuration = { pkgs, ... }: {
-      # List packages installed in system profile. To search by name, run:
+
+      # NOTE: List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
-      # Necessary for using flakes on this system.
       nix.settings.experimental-features = "nix-command flakes";
+
+      nix.gc = {
+        automatic = true;
+	# dates = "weekly"; # if not nix-darwin
+        interval = { Weekday = 0; Hour = 0; Minute = 0; };
+        options = "--delete-older-than 300d";
+      };
 
       # Set Git commit hash for darwin-version.
       system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -47,6 +54,7 @@
       '';
 
       system.defaults = {
+
       	dock = {
 	  show-recents = false;
 	  autohide = true;
@@ -56,6 +64,8 @@
             { app = "/System/Applications/System Settings.app"; }
 	  ];
 	};
+
+	screencapture.location = "/Users/${username}/Screenshots";
 
 	finder.FXPreferredViewStyle = "Nlsv"; # defaults to list view on finder
 	finder.NewWindowTarget = "Home";
@@ -115,6 +125,9 @@
 	  "zoom" # moved from systemPackages, for the alias
 	  "whatsapp"
 	  "google-chrome" # fall back browser
+	  "little-snitch"
+	  "obs"
+	  "loopback"
 	  "font-sf-mono"
 	  "font-sf-pro"
 	  "font-new-york"
@@ -157,8 +170,11 @@
             enable = true;
             shellAliases = {
               rebuild = "sudo darwin-rebuild switch --flake ~/.config/nix";
+	      update = "nix flake update --flake ~/.config/nix";
+	      cleanup = "sudo nix-env --delete-generations +5";
 	      memo = "zk edit -i";
 	      config = "nvim ~/.config/nix/flake.nix";
+	      config-nvim = "nvim ~/.config/nix/nvim/init.lua";
             };
           };
           
@@ -215,8 +231,12 @@
 	    };
 	  };
 
+          # config neovim is left to neovim...
           home.file.".hammerspoon/init.lua".source = ./hammerspoon/init.lua;
-	  # NOTE: you will need to back config.local file too 
+	  
+          home.file.".config/nvim/init.lua".source = ./nvim/init.lua; 
+
+	  # NOTE: you will need to back up config.local file too 
 	  home.file.".ssh/config".text = ''
 	  Include ~/.ssh/config.local
 	  '';
