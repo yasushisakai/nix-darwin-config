@@ -82,6 +82,8 @@
         ffmpeg 
         pandoc
 	imagemagick
+	tectonic
+        ghostscript
       ];
 
       programs.zsh = {
@@ -89,6 +91,13 @@
         enableFastSyntaxHighlighting = true;
         enableFzfCompletion = true;
         enableFzfHistory = true;
+      };
+
+      fonts = {
+      	packages = with pkgs; [
+        hackgen-nf-font 
+	cm_unicode
+        ];
       };
       
       homebrew = {
@@ -106,6 +115,9 @@
 	  "zoom" # moved from systemPackages, for the alias
 	  "whatsapp"
 	  "google-chrome" # fall back browser
+	  "font-sf-mono"
+	  "font-sf-pro"
+	  "font-new-york"
         ];
 
 	# NOTE: this will not get purged through `onActivation.cleanup`
@@ -146,6 +158,7 @@
             shellAliases = {
               rebuild = "sudo darwin-rebuild switch --flake ~/.config/nix";
 	      memo = "zk edit -i";
+	      config = "nvim ~/.config/nix/flake.nix";
             };
           };
           
@@ -197,6 +210,7 @@
 	      };
 	      tool = {
 	      	editor = "nvim";
+		pandoc.extra-args = [ "--bibliography=~/Documents/memo/main.bib" "--citeproc" ];
 	      };
 	    };
 	  };
@@ -206,6 +220,11 @@
 	  home.file.".ssh/config".text = ''
 	  Include ~/.ssh/config.local
 	  '';
+
+          home.file.".config/ghostty/config".text = ''
+            font-family = HackGen35 Console NF
+            font-size = 14
+          '';
 
         };
       }; # home-manager
