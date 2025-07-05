@@ -105,7 +105,11 @@
           nixpkgs.hostPlatform = "aarch64-darwin";
           nixpkgs.config.allowUnfree = true;
 
+          #####################
+          # GLOBAL packages
+          #####################
           environment.systemPackages = with pkgs; [
+            htop
             ffmpeg
             pandoc
             imagemagick
@@ -131,6 +135,9 @@
             enable = true;
             onActivation.cleanup = "zap";
 
+            #####################
+            # Homebrew packages
+            #####################
             brews = [ "clang-format" ];
             casks = [
               "ghostty"
@@ -172,6 +179,9 @@
               {
                 home.stateVersion = "24.11"; # don't change this!
 
+                #####################
+                # Home Manger packages
+                #####################
                 home.packages = with pkgs; [
                   fzf
                   claude-code
@@ -223,8 +233,25 @@
                     config-nvim = "nvim ~/.config/nix/nvim/init.lua";
                     bib = "nvim ${zk_directory}main.bib";
                   };
+                  history = {
+                    append = true;
+                    expireDuplicatesFirst = true;
+                    findNoDups = true;
+                    ignoreAllDups = true;
+                    ignorePatterns = [
+                      "cd *"
+                      "rm *"
+                    ];
+                    saveNoDups = true;
+                  };
                   initContent = ''
                     export ZK_NOTEBOOK_DIR="${zk_directory}";
+
+                    bindkey -v
+                    bindkey '^R' fzf-history-widget
+                    bindkey -M viins 'jk' vi-cmd-mode
+                    bindkey -M viins '^?' backward-delete-char
+                    bindkey -M viins '^H' backward-delete-char
                   '';
                 };
 
