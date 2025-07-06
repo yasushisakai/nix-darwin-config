@@ -209,7 +209,7 @@
 
                 programs.direnv = {
                   enable = true;
-                  enableZshIntegration = true;
+                  enableZshIntegration = false; # We'll handle this manually
                   nix-direnv.enable = true;
                 };
 
@@ -224,6 +224,7 @@
                 programs.zsh = {
                   enable = true;
                   autosuggestion.enable = true;
+                  enableCompletion = false; # We'll handle this manually
                   shellAliases = {
                     rebuild = "sudo darwin-rebuild switch --flake ~/.config/nix";
                     update = "nix flake update --flake ~/.config/nix";
@@ -244,7 +245,7 @@
                     ];
                     saveNoDups = true;
                   };
-                  initContent = ''
+                  initExtra = ''
                     export ZK_NOTEBOOK_DIR="${zk_directory}";
 
                     bindkey -v
@@ -252,6 +253,82 @@
                     bindkey -M viins 'jk' vi-cmd-mode
                     bindkey -M viins '^?' backward-delete-char
                     bindkey -M viins '^H' backward-delete-char
+
+                    # Store compdef calls until compinit is loaded
+                    typeset -ga _DEFERRED_COMPDEFS
+                    compdef() {
+                      if [[ -z "$_COMPINIT_LOADED" ]]; then
+                        _DEFERRED_COMPDEFS+=("$*")
+                      else
+                        command compdef "$@"
+                      fi
+                    }
+
+                    # Apply deferred compdefs after loading
+                    _apply_deferred_compdefs() {
+                      local args
+                      for args in "''${_DEFERRED_COMPDEFS[@]}"; do
+                        eval "compdef $args"
+                      done
+                      unset _DEFERRED_COMPDEFS
+                      unfunction compdef
+                      unfunction _apply_deferred_compdefs
+                    }
+
+                    # Lazy load compinit
+                    _lazy_load_compinit() {
+                      if [[ -z "$_COMPINIT_LOADED" ]]; then
+                        autoload -Uz compinit
+                        compinit -C
+                        _COMPINIT_LOADED=1
+                        bindkey '^I' expand-or-complete
+                        if [[ -n "''${_DEFERRED_COMPDEFS}" ]]; then
+                          _apply_deferred_compdefs
+                        fi
+                      fi
+                    }
+
+                    # Trigger compinit on first tab completion attempt
+                    _first_tab() {
+                      _lazy_load_compinit
+                      zle expand-or-complete
+                    }
+                    zle -N _first_tab
+                    bindkey '^I' _first_tab
+
+                    # Lazy load direnv
+                    _lazy_load_direnv() {
+                      if [[ -z "$_DIRENV_LOADED" ]]; then
+                        eval "$(${pkgs.direnv}/bin/direnv hook zsh)"
+                        _DIRENV_LOADED=1
+                        # After loading, call the real direnv hook
+                        _direnv_hook
+                      fi
+                    }
+
+                    # Override cd to check for direnv
+                    cd() {
+                      builtin cd "$@"
+                      # Check if we need direnv after changing directory
+                      if [[ -f .envrc ]] || [[ -f .env ]] || [[ -f shell.nix ]] || [[ -f flake.nix ]]; then
+                        _lazy_load_direnv
+                      elif command -v _direnv_hook &> /dev/null; then
+                        # If direnv is already loaded, run its hook
+                        _direnv_hook
+                      fi
+                    }
+
+                    # Also check for .envrc in current directory on startup
+                    if [[ -f .envrc ]] || [[ -f .env ]] || [[ -f shell.nix ]] || [[ -f flake.nix ]]; then
+                      _lazy_load_direnv
+                    fi
+
+                    # Add profiling function to measure startup time
+                    zsh-startup-time() {
+                      for i in $(seq 1 10); do
+                        time zsh -i -c exit
+                      done
+                    }
                   '';
                 };
 
