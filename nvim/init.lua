@@ -1,6 +1,12 @@
 vim.o.number = true
 vim.o.scrolloff = 10
 vim.o.cursorline = true
+vim.o.smartcase = true
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 2
+vim.o.foldnestmax = 4
+vim.wo.foldmethod = "expr"
+vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 
 -- if clipboard is acting weird
 -- vim.schedule(function()
@@ -12,8 +18,17 @@ vim.g.maplocalleader = " "
 
 -- LSP reltated default keymaps `:h grr`
 vim.keymap.set("i", "jk", "<esc>")
-vim.keymap.set("n", "<leader><leader>", ":e #<cr>")
-vim.keymap.set("n", "<leader>bd", "bp | bd #<cr>")
+
+local map = function(keys, func)
+    vim.keymap.set("n", keys, func)
+end
+
+map("<leader><leader>", ":e #<cr>")
+map("<leader>bd", "bp | bd #<cr>")
+map("j", "gj")
+map("k", "gk")
+map("gj", "j")
+map("gk", "k")
 
 -- auto install lazy
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -90,7 +105,7 @@ require("lazy").setup({
             -- by default but we let "clangd" do that.
             -- This is because "clangd" also supports
             -- other filetypes like, "cuda" and "proto"
-            vim.lsp.config("sourcekit-lsp", {
+            vim.lsp.config("sourcekit", {
                 filetypes = { "swift", "objc", "objcpp" },
             })
 
@@ -114,7 +129,7 @@ require("lazy").setup({
                 "lua_ls",
                 "gopls",
                 "clangd",
-                "sourcekit_lsp",
+                "sourcekit",
                 -- The following LSPs for python and
                 -- typescript should be configured
                 -- through direnv
@@ -154,9 +169,6 @@ require("lazy").setup({
             pcall(ts.load_extension, "bibtex")
 
             local bi = require("telescope.builtin")
-            local map = function(keys, func)
-                vim.keymap.set("n", keys, func)
-            end
             map("<leader>ff", bi.find_files)
             map("<leader>fd", bi.grep_string)
             map("<leader>fg", bi.live_grep)
@@ -171,14 +183,25 @@ require("lazy").setup({
         branch = "master",
         lazy = false,
         build = ":TSUpdate",
-        opts = {
-            -- `tree-sitter` is installed through home-manager
-            auto_install = true,
-            highlight = { enable = true },
-            additional_vim_regex_highlighting = false,
-        },
+        config = function()
+            local configs = require("nvim-treesitter.configs")
+            configs.setup({
+                auto_install = true,
+                highlight = { enable = true },
+                indent = { enable = true },
+                incremental_selection = {
+                    enable = true,
+                    keymaps = {
+                        init_selection = "gsn", -- set to `false` to disable one of the mappings
+                        node_incremental = "gsi",
+                        scope_incremental = "gss",
+                        node_decremental = "gsd",
+                    },
+                },
+                additional_vim_regex_highlighting = false,
+            })
+        end,
     },
-
     {
         "zk-org/zk-nvim",
         dependencies = {
@@ -188,6 +211,54 @@ require("lazy").setup({
             require("zk").setup({
                 picker = "telescope",
             })
+
+            map("<leader>zf", "<cmd>ZkNotes<cr>")
+            map("<leader>zi", "<cmd>ZkInsertLink<cr>")
+            map("<leader>zc", "<cmd>Telescope bibtex format_string=[@%s] <cr>")
+        end,
+    },
+
+    {
+        "folke/zen-mode.nvim",
+        config = function()
+            require("zen-mode").setup({
+                window = {
+                    options = {
+                        number = false,
+                    },
+                },
+                plugins = {
+                    twilight = false,
+                },
+            })
+            map("<leader>zz", function()
+                vim.cmd("ZenMode")
+            end)
+        end,
+    },
+
+    {
+        "lukas-reineke/headlines.nvim",
+        dependencies = "nvim-treesitter/nvim-treesitter",
+        config = function()
+            require("headlines").setup({})
+        end,
+    },
+
+    {
+        "echasnovski/mini.nvim",
+        config = function()
+            require("mini.ai").setup({ n_lines = 500 })
+            require("mini.pairs").setup()
+        end,
+    },
+
+    {
+        "gandor/leap.nvim",
+        lazy = false,
+        opts = {},
+        config = function()
+            require("leap").set_default_mappings()
         end,
     },
 })

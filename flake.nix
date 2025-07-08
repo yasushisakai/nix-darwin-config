@@ -88,6 +88,7 @@
             finder.ShowStatusBar = true;
 
             NSGlobalDomain = {
+              _HIHideMenuBar = true;
               AppleShowAllExtensions = true;
               AppleMeasurementUnits = "Centimeters";
               AppleICUForce24HourTime = true;
@@ -138,7 +139,10 @@
             #####################
             # Homebrew packages
             #####################
-            brews = [ "clang-format" ];
+            brews = [
+              "clang-format"
+              "hledger"
+            ];
             casks = [
               "ghostty"
               "bitwarden"
@@ -175,7 +179,7 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             users.${username} =
-              { pkgs, ... }:
+              { pkgs, lib, ... }:
               {
                 home.stateVersion = "24.11"; # don't change this!
 
@@ -187,6 +191,7 @@
                   claude-code
                   go
                   tree-sitter
+                  sketchybar
                   # script language runtimes like python and nodejs
                   # should be installed through direnv
 
@@ -206,6 +211,15 @@
                   ruff # python
                   prettierd # js, ts and md
                 ];
+
+                launchd.agents.sketchybar = {
+                  enable = true;
+                  config = {
+                    ProgramArguments = [ "${pkgs.sketchybar}/bin/sketchybar" ];
+                    KeepAlive = true;
+                    RunAtLoad = true;
+                  };
+                };
 
                 programs.direnv = {
                   enable = true;
@@ -306,9 +320,27 @@
                       fi
                     }
 
-                    # Override cd to check for direnv
+                    # Lazy load zoxide
+                    _lazy_load_zoxide() {
+                      if [[ -z "$_ZOXIDE_LOADED" ]]; then
+                        eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
+                        _ZOXIDE_LOADED=1
+                      fi
+                    }
+
+                    # Override cd to check for direnv and load zoxide
                     cd() {
+                      # Load zoxide on first use
+                      if [[ -z "$_ZOXIDE_LOADED" ]]; then
+                        _lazy_load_zoxide
+                        # After loading zoxide, use the new cd function it created
+                        cd "$@"
+                        return
+                      fi
+                      
+                      # Normal cd operation (will use zoxide's cd if loaded)
                       builtin cd "$@"
+                      
                       # Check if we need direnv after changing directory
                       if [[ -f .envrc ]] || [[ -f .env ]] || [[ -f shell.nix ]] || [[ -f flake.nix ]]; then
                         _lazy_load_direnv
@@ -356,7 +388,7 @@
 
                 programs.zoxide = {
                   enable = true;
-                  enableZshIntegration = true;
+                  enableZshIntegration = false; # We'll handle this manually
                   options = [ "--cmd cd" ];
                 };
 
@@ -406,6 +438,28 @@
                 home.file.".config/stylua/stylua.toml".text = ''
                   indent_type = "Spaces"
                   indent_width = 4
+                '';
+
+                home.file.".config/sketchybar".source = ./sketchybar;
+                home.activation.sketchybarPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+                  if [ -d "$HOME/.config/sketchybar" ]; then
+                    find "$HOME/.config/sketchybar" -type f \( -name "*.sh" -o -name "sketchybarrc" \) -exec chmod +x {} \;
+                  fi
+                '';
+
+                # Manage .zprofile with cached brew shellenv
+                home.file.".zprofile".text = ''
+                  # Cache brew shellenv output for faster startup
+                  BREW_SHELLENV_CACHE="$HOME/.cache/brew-shellenv.sh"
+
+                  # Refresh cache if brew binary is newer than cache or cache doesn't exist
+                  if [[ ! -f "$BREW_SHELLENV_CACHE" ]] || [[ /opt/homebrew/bin/brew -nt "$BREW_SHELLENV_CACHE" ]]; then
+                    mkdir -p "$(dirname "$BREW_SHELLENV_CACHE")"
+                    /opt/homebrew/bin/brew shellenv > "$BREW_SHELLENV_CACHE"
+                  fi
+
+                  # Source the cached version
+                  source "$BREW_SHELLENV_CACHE"
                 '';
 
               };
