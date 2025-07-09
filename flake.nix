@@ -88,7 +88,6 @@
             finder.ShowStatusBar = true;
 
             NSGlobalDomain = {
-              _HIHideMenuBar = true;
               AppleShowAllExtensions = true;
               AppleMeasurementUnits = "Centimeters";
               AppleICUForce24HourTime = true;
@@ -191,7 +190,6 @@
                   claude-code
                   go
                   tree-sitter
-                  sketchybar
                   # script language runtimes like python and nodejs
                   # should be installed through direnv
 
@@ -211,15 +209,6 @@
                   ruff # python
                   prettierd # js, ts and md
                 ];
-
-                launchd.agents.sketchybar = {
-                  enable = true;
-                  config = {
-                    ProgramArguments = [ "${pkgs.sketchybar}/bin/sketchybar" ];
-                    KeepAlive = true;
-                    RunAtLoad = true;
-                  };
-                };
 
                 programs.direnv = {
                   enable = true;
@@ -438,13 +427,6 @@
                 home.file.".config/stylua/stylua.toml".text = ''
                   indent_type = "Spaces"
                   indent_width = 4
-                '';
-
-                home.file.".config/sketchybar".source = ./sketchybar;
-                home.activation.sketchybarPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-                  if [ -d "$HOME/.config/sketchybar" ]; then
-                    find "$HOME/.config/sketchybar" -type f \( -name "*.sh" -o -name "sketchybarrc" \) -exec chmod +x {} \;
-                  fi
                 '';
 
                 # Manage .zprofile with cached brew shellenv
