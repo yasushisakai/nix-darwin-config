@@ -22,14 +22,11 @@
       ###########################################################
 
       username = "yasushi";
-      hostname = "sunny"; # = `scutil --get LocalHostName`
+      hostname = "$(scutil --get LocalHostName)"; # = `scutil --get LocalHostName`
 
       # git
       fullname = "Yasushi Sakai";
       email = "yasushi.accounts@fastmail.com";
-
-      # zk
-      zk_directory = "$HOME/Documents/memo/";
 
       ###########################################################
 
@@ -40,17 +37,6 @@
           # NOTE: List packages installed in system profile. To search by name, run:
           # $ nix-env -qaP | grep wget
           nix.settings.experimental-features = "nix-command flakes";
-
-          nix.gc = {
-            automatic = true;
-            # dates = "weekly"; # if not nix-darwin
-            interval = {
-              Weekday = 0;
-              Hour = 0;
-              Minute = 0;
-            };
-            options = "--delete-older-than 300d";
-          };
 
           # Set Git commit hash for darwin-version.
           system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -64,44 +50,7 @@
             remapCapsLockToControl = true;
           };
 
-          system.activationScripts.postUserActivateion.text = ''
-            sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-          '';
-
-          system.defaults = {
-
-            dock = {
-              show-recents = false;
-              autohide = true;
-              mru-spaces = false;
-              persistent-apps = [
-                { app = "/System/Applications/Messages.app"; }
-                { app = "/System/Applications/System Settings.app"; }
-              ];
-            };
-
-            screencapture.location = "/Users/${username}/Screenshots";
-
-            finder.FXPreferredViewStyle = "Nlsv"; # defaults to list view on finder
-            finder.NewWindowTarget = "Home";
-            finder.ShowPathbar = true;
-            finder.ShowStatusBar = true;
-
-            NSGlobalDomain = {
-              _HIHideMenuBar = true;
-              AppleShowAllExtensions = true;
-              AppleMeasurementUnits = "Centimeters";
-              AppleICUForce24HourTime = true;
-              NSAutomaticSpellingCorrectionEnabled = false;
-            };
-          };
-
-          # Touch ID
-          security.pam.services.sudo_local.touchIdAuth = true;
-          security.pam.services.sudo_local.watchIdAuth = true;
-
-          # Microsoft Office was installed through MIT credentials
-          # https://m365.cloud.microsoft/chat/?auth=2
+          system.defaults = { };
 
           nixpkgs.hostPlatform = "aarch64-darwin";
           nixpkgs.config.allowUnfree = true;
@@ -141,33 +90,16 @@
             #####################
             brews = [
               "clang-format"
-              "hledger"
             ];
             casks = [
               "ghostty"
               "bitwarden"
-              "figma"
-              "slack"
-              "discord"
-              "hammerspoon"
-              "zoom" # moved from systemPackages, for the alias
-              "whatsapp"
               "google-chrome" # fall back browser
-              "little-snitch"
-              "obs"
-              "loopback"
-              "font-sf-mono"
-              "font-sf-pro"
-              "font-new-york"
             ];
 
             # NOTE: this will not get purged through `onActivation.cleanup`
             masApps = {
               # apple products
-              "Final Cut Pro" = 424389933;
-              "Logic Pro" = 634148309;
-              "Compressor" = 424390742;
-              "Keynote" = 409183694;
               "Xcode" = 497799835;
               "Tailscale" = 1475387142; # Tailscale said mas rather than brew
             };
@@ -191,7 +123,6 @@
                   claude-code
                   go
                   tree-sitter
-                  sketchybar
                   # script language runtimes like python and nodejs
                   # should be installed through direnv
 
@@ -211,15 +142,6 @@
                   ruff # python
                   prettierd # js, ts and md
                 ];
-
-                launchd.agents.sketchybar = {
-                  enable = true;
-                  config = {
-                    ProgramArguments = [ "${pkgs.sketchybar}/bin/sketchybar" ];
-                    KeepAlive = true;
-                    RunAtLoad = true;
-                  };
-                };
 
                 programs.direnv = {
                   enable = true;
@@ -421,7 +343,6 @@
                 };
 
                 # config neovim is left to neovim...
-                home.file.".hammerspoon/init.lua".source = ./hammerspoon/init.lua;
 
                 home.file.".config/nvim/init.lua".source = ./nvim/init.lua;
 
@@ -438,13 +359,6 @@
                 home.file.".config/stylua/stylua.toml".text = ''
                   indent_type = "Spaces"
                   indent_width = 4
-                '';
-
-                home.file.".config/sketchybar".source = ./sketchybar;
-                home.activation.sketchybarPermissions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-                  if [ -d "$HOME/.config/sketchybar" ]; then
-                    find "$HOME/.config/sketchybar" -type f \( -name "*.sh" -o -name "sketchybarrc" \) -exec chmod +x {} \;
-                  fi
                 '';
 
                 # Manage .zprofile with cached brew shellenv
