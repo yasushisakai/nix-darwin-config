@@ -61,7 +61,7 @@ require("lazy").setup({
                 go = { "gofmt" },
                 python = { "ruff" },
                 swift = { "swift" },
-                markdown = { "prettierd" },
+                markdown = { "dprint" },
                 javascript = { "prettierd" },
                 typescript = { "prettierd" },
             },

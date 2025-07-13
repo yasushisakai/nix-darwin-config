@@ -88,6 +88,7 @@
             finder.ShowStatusBar = true;
 
             NSGlobalDomain = {
+              _HIHideMenuBar = true;
               AppleShowAllExtensions = true;
               AppleMeasurementUnits = "Centimeters";
               AppleICUForce24HourTime = true;
@@ -133,21 +134,33 @@
 
           homebrew = {
             enable = true;
-            onActivation.cleanup = "zap";
+
+            onActivation = {
+              autoUpdate = true;
+              cleanup = "zap";
+              upgrade = true;
+            };
 
             #####################
             # Homebrew packages
             #####################
+            taps = [
+              "keith/formulae"
+            ];
+
             brews = [
               "clang-format"
               "hledger"
+              "keith/formulae/reminders-cli"
             ];
+
             casks = [
               "ghostty"
               "bitwarden"
               "figma"
               "slack"
               "discord"
+              "skim"
               "hammerspoon"
               "zoom" # moved from systemPackages, for the alias
               "whatsapp"
@@ -155,6 +168,8 @@
               "little-snitch"
               "obs"
               "loopback"
+              "homerow"
+              "superwhisper"
               "font-sf-mono"
               "font-sf-pro"
               "font-new-york"
@@ -197,7 +212,7 @@
                   lua-language-server
                   gopls
                   # The following is configured in neovim
-                  # but this should be installed through zk_directorydirenv
+                  # but this should be installed through direnv
                   # pyright
                   # typescript-language-server (ts_ls)
 
@@ -207,12 +222,13 @@
                   # formatters are exceptions to
                   # python and nodejs
                   ruff # python
-                  prettierd # js, ts and md
+                  prettierd # js, ts
+                  dprint # markdown
                 ];
 
                 programs.direnv = {
                   enable = true;
-                  enableZshIntegration = false; # We'll handle this manually
+                  enableZshIntegration = true;
                   nix-direnv.enable = true;
                 };
 
@@ -299,16 +315,6 @@
                     zle -N _first_tab
                     bindkey '^I' _first_tab
 
-                    # Lazy load direnv
-                    _lazy_load_direnv() {
-                      if [[ -z "$_DIRENV_LOADED" ]]; then
-                        eval "$(${pkgs.direnv}/bin/direnv hook zsh)"
-                        _DIRENV_LOADED=1
-                        # After loading, call the real direnv hook
-                        _direnv_hook
-                      fi
-                    }
-
                     # Lazy load zoxide
                     _lazy_load_zoxide() {
                       if [[ -z "$_ZOXIDE_LOADED" ]]; then
@@ -329,20 +335,7 @@
                       
                       # Normal cd operation (will use zoxide's cd if loaded)
                       builtin cd "$@"
-                      
-                      # Check if we need direnv after changing directory
-                      if [[ -f .envrc ]] || [[ -f .env ]] || [[ -f shell.nix ]] || [[ -f flake.nix ]]; then
-                        _lazy_load_direnv
-                      elif command -v _direnv_hook &> /dev/null; then
-                        # If direnv is already loaded, run its hook
-                        _direnv_hook
-                      fi
                     }
-
-                    # Also check for .envrc in current directory on startup
-                    if [[ -f .envrc ]] || [[ -f .env ]] || [[ -f shell.nix ]] || [[ -f flake.nix ]]; then
-                      _lazy_load_direnv
-                    fi
 
                     # Add profiling function to measure startup time
                     zsh-startup-time() {
@@ -413,6 +406,16 @@
                 home.file.".hammerspoon/init.lua".source = ./hammerspoon/init.lua;
 
                 home.file.".config/nvim/init.lua".source = ./nvim/init.lua;
+
+                # dprint for markdown
+                home.file.".dprint.json".text = ''
+                  {
+                    "lineWidth": 80,
+                    "plugins": [
+                      "https://plugins.dprint.dev/markdown-0.16.1.wasm"
+                    ]
+                  }
+                '';
 
                 # NOTE: you will need to back up config.local file too
                 home.file.".ssh/config".text = ''
