@@ -30,6 +30,11 @@ map("k", "gk")
 map("gj", "j")
 map("gk", "k")
 
+vim.keymap.set("v", "j", "gj")
+vim.keymap.set("v", "k", "gk")
+vim.keymap.set("v", "gk", "k")
+vim.keymap.set("v", "gj", "j")
+
 -- auto install lazy
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -61,9 +66,10 @@ require("lazy").setup({
                 go = { "gofmt" },
                 python = { "ruff" },
                 swift = { "swift" },
-                markdown = { "dprint" },
+                markdown = { "prettierd" },
                 javascript = { "prettierd" },
                 typescript = { "prettierd" },
+                css = { "prettierd" },
             },
             format_on_save = {
                 timeout_ms = 500,
@@ -135,6 +141,9 @@ require("lazy").setup({
                 -- through direnv
                 "pyright",
                 "ts_ls",
+                "html",
+                "jsonls",
+                "cssls",
             })
         end,
     },

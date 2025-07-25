@@ -20,12 +20,14 @@ local gotoApplication = function(appName)
     end
 end
 
-hs.hotkey.bind({ "rightcmd" }, "-", gotoApplication("Ghostty"))
--- This is for the split keyboards that has home-mods
-hs.hotkey.bind({ "shift", "ctrl", "alt" }, "a", gotoApplication("Ghostty"))
+hs.hotkey.bind({ "rightalt" }, "-", gotoApplication("Ghostty"))
 
-hs.hotkey.bind({ "rightcmd" }, "=", gotoApplication("Safari"))
-hs.hotkey.bind({ "shift", "ctrl", "alt" }, "s", gotoApplication("Safari"))
+-- for the split keyboards
+hs.hotkey.bind({ "ctrl", "alt", "shift" }, "a", gotoApplication("Ghostty"))
+
+hs.hotkey.bind({ "rightalt" }, "=", gotoApplication("Safari"))
+
+hs.hotkey.bind({ "ctrl", "alt", "shift" }, "s", gotoApplication("Safari"))
 
 -- Show notification on config load
 hs.notify.new({ title = "Hammerspoon", informativeText = "Config loaded" }):send()

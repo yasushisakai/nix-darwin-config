@@ -116,6 +116,7 @@
             imagemagick
             tectonic
             ghostscript
+            tldr
           ];
 
           programs.zsh = {
@@ -149,6 +150,7 @@
             ];
 
             brews = [
+              "dcraw"
               "clang-format"
               "hledger"
               "keith/formulae/reminders-cli"
@@ -170,6 +172,7 @@
               "loopback"
               "homerow"
               "superwhisper"
+              "darktable"
               "font-sf-mono"
               "font-sf-pro"
               "font-new-york"
@@ -209,6 +212,7 @@
                   # should be installed through direnv
 
                   # *** LSPs ***
+                  vscode-langservers-extracted
                   lua-language-server
                   gopls
                   # The following is configured in neovim
@@ -223,7 +227,6 @@
                   # python and nodejs
                   ruff # python
                   prettierd # js, ts
-                  dprint # markdown
                 ];
 
                 programs.direnv = {
@@ -406,16 +409,6 @@
                 home.file.".hammerspoon/init.lua".source = ./hammerspoon/init.lua;
 
                 home.file.".config/nvim/init.lua".source = ./nvim/init.lua;
-
-                # dprint for markdown
-                home.file.".dprint.json".text = ''
-                  {
-                    "lineWidth": 80,
-                    "plugins": [
-                      "https://plugins.dprint.dev/markdown-0.16.1.wasm"
-                    ]
-                  }
-                '';
 
                 # NOTE: you will need to back up config.local file too
                 home.file.".ssh/config".text = ''
