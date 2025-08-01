@@ -100,8 +100,29 @@
           security.pam.services.sudo_local.touchIdAuth = true;
           security.pam.services.sudo_local.watchIdAuth = true;
 
-          # Microsoft Office was installed through MIT credentials
-          # https://m365.cloud.microsoft/chat/?auth=2
+          services.postgresql = {
+            enable = true;
+            package = pkgs.postgresql_16;
+            dataDir = "/Users/${username}/.local/share/postgresql/16";
+            initdbArgs = [
+              "--encoding=UTF8"
+              "--locale=C"
+              "-U"
+              "${username}"
+            ];
+
+            authentication = pkgs.lib.mkOverride 10 ''
+              local   all       all                               trust
+              host    all       all       127.0.0.1/32            trust
+              host    all       all       ::1/128                 trust
+            '';
+
+          };
+
+          # Manual installations:
+          #   - Microsoft Office was installed through MIT credentials
+          #   https://m365.cloud.microsoft/chat/?auth=2
+          #   - Rhinoceros 7
 
           nixpkgs.hostPlatform = "aarch64-darwin";
           nixpkgs.config.allowUnfree = true;
@@ -151,12 +172,15 @@
 
             brews = [
               "dcraw"
+              "libraw"
               "clang-format"
               "hledger"
               "keith/formulae/reminders-cli"
             ];
 
             casks = [
+              "blender"
+              "rhino-app"
               "ghostty"
               "bitwarden"
               "figma"
@@ -204,6 +228,8 @@
                 # Home Manger packages
                 #####################
                 home.packages = with pkgs; [
+                  postgresql_16
+                  flyctl
                   fzf
                   claude-code
                   go
