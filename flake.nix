@@ -64,7 +64,7 @@
             remapCapsLockToControl = true;
           };
 
-          system.activationScripts.postUserActivateion.text = ''
+          system.activationScripts.postActivation.text = ''
             sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
           '';
 
