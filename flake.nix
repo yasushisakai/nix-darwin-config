@@ -7,6 +7,9 @@
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
+    sops-nix.url = "github:Mic92/sops-nix";
+    #sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -16,6 +19,7 @@
       self,
       nix-darwin,
       nixpkgs,
+      sops-nix,
       home-manager,
     }:
     let
@@ -34,7 +38,12 @@
       ###########################################################
 
       configuration =
-        { pkgs, ... }:
+        {
+          pkgs,
+          inputs,
+          config,
+          ...
+        }:
         {
 
           # NOTE: List packages installed in system profile. To search by name, run:
@@ -96,6 +105,15 @@
             };
           };
 
+          # sops
+          # sops.defaultSopsFile = ./secrets.yaml;
+          # sops.defaultSopsFormat = "yaml";
+          # sops.age.keyFile = "/Users/${username}/.config/sops/age/keys.txt";
+          # sops.secrets.OPENAI_API_KEY = {
+          #   format = "yaml";
+          #   sopsFile = ./secrets.yaml;
+          # };
+
           # Touch ID
           security.pam.services.sudo_local.touchIdAuth = true;
           security.pam.services.sudo_local.watchIdAuth = true;
@@ -122,7 +140,8 @@
           # Manual installations:
           #   - Microsoft Office was installed through MIT credentials
           #   https://m365.cloud.microsoft/chat/?auth=2
-          #   - Rhinoceros 7
+          #   - MIT asked to install certification helper app
+          #   https://ist.mit.edu/mit-apps/certaid
 
           nixpkgs.hostPlatform = "aarch64-darwin";
           nixpkgs.config.allowUnfree = true;
@@ -138,6 +157,9 @@
             tectonic
             ghostscript
             tldr
+            age
+            sops
+            ssh-to-age
           ];
 
           programs.zsh = {
@@ -476,6 +498,7 @@
       darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
         modules = [
           configuration
+          sops-nix.darwinModules.sops
           home-manager.darwinModules.home-manager
         ];
       };
