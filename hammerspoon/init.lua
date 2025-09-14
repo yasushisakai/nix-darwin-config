@@ -29,5 +29,9 @@ hs.hotkey.bind({ "rightalt" }, "=", gotoApplication("Safari"))
 
 hs.hotkey.bind({ "ctrl", "alt", "shift" }, "s", gotoApplication("Safari"))
 
+hs.hotkey.bind({ "rightalt" }, "0", gotoApplication("acme"))
+
+hs.hotkey.bind({ "ctrl", "alt", "shift" }, "d", gotoApplication("acme"))
+
 -- Show notification on config load
 hs.notify.new({ title = "Hammerspoon", informativeText = "Config loaded" }):send()
